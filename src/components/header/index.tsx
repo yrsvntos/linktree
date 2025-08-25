@@ -1,10 +1,23 @@
 import { Link } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
+import { auth } from "../../pages/services/firebaseConnection";
+import { signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export function Header(){
 
-    function handleLogout(){
-        alert("Logout");
+    const navigate = useNavigate();
+
+    async function handleLogout(){
+        await signOut(auth)
+        .then(() => {
+            navigate("/");
+            toast.info("Logout efectuado com sucesso!");
+        })
+        .catch((error) => (
+            toast.warning("Erro ao fazer logout" +error)
+        ))
     }
     return(
         <header className="w-full max-w-2xl mt-4 px-1">

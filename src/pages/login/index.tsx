@@ -1,20 +1,37 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Input } from "../../components/input";
 import { FiLogIn} from "react-icons/fi";
+import { auth } from "../services/firebaseConnection";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 
 export function Login(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
     function handleRegister(e: FormEvent){
         e.preventDefault();
 
-        console.log({
-            email,
-            password
-        })
+        if(email === '' || password === ''){
+            alert("Por favor preencha todos os campos!");
+            return;
+        }
+       signInWithEmailAndPassword(auth, email, password)
+       .then(() => {
+            navigate("/admin", {replace: true});
+            alert(`Seja bem-vindo ${email}`);
+       })
+       .catch((error) =>{
+            if (error.code === "auth/user-not-found") {
+                alert("Usuário não encontrado!");
+            } else if (error.code === "auth/wrong-password") {
+                alert("Senha incorreta!");
+            } else {
+                alert("Erro ao fazer login. Tente novamente.");
+            }
+       })
     }
     return(
         <div 
@@ -38,7 +55,7 @@ export function Login(){
                 />
 
                 <Input
-                    type="text"
+                    type="password"
                     placeholder="Digite a sua password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
