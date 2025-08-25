@@ -4,6 +4,7 @@ import { Input } from "../../components/input";
 import { FiLogIn} from "react-icons/fi";
 import { auth } from "../services/firebaseConnection";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { toast } from "react-toastify";
 
 
 export function Login(){
@@ -21,7 +22,7 @@ export function Login(){
        signInWithEmailAndPassword(auth, email, password)
        .then(() => {
             navigate("/admin", {replace: true});
-            alert(`Seja bem-vindo ${email}`);
+            toast.success("Login realizado com sucesso! 🚀");
        })
        .catch((error) =>{
             if (error.code === "auth/user-not-found") {
@@ -29,7 +30,7 @@ export function Login(){
             } else if (error.code === "auth/wrong-password") {
                 alert("Senha incorreta!");
             } else {
-                alert("Erro ao fazer login. Tente novamente.");
+                toast.error("Erro ao fazer login 😢");
             }
        })
     }
