@@ -1,7 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Header } from "../../components/header";
 import { Input } from "../../components/input";
+import { db } from "../services/firebaseConnection";
 import { FiLink, FiTrash } from "react-icons/fi";
+import { toast } from "react-toastify";
+
+import { 
+    collection, 
+    addDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    doc,
+    deleteDoc 
+} from "firebase/firestore";
+
+interface LinksProps{
+    id: string;
+    name: string;
+    url: string;
+    color: string;
+    bg: string;
+}
 
 export function Admin(){
 
@@ -9,10 +29,65 @@ export function Admin(){
     const [urlInput, setUrlInput] = useState("");
     const [corInput, setCorInput] = useState("#ffffff");
     const [bgCorInput, setBgCorInput] = useState("#000");
+    const [links, setLinks] = useState<LinksProps[]>([]);
 
-    function handleRegister(){
-        alert("Teste");
-        return
+    useEffect(() => {
+
+        const linkRef = collection(db, "links");
+        const queryRef = query(linkRef, orderBy("created", "asc"));
+
+        const unsub = onSnapshot(queryRef, (snapshot) => {
+            let lista = [] as LinksProps[];
+            snapshot.forEach((doc) => {
+                lista.push({
+                    id: doc.id,
+                    name: doc.data().name,
+                    url: doc.data().url,
+                    bg: doc.data().bg,
+                    color: doc.data().color
+                })
+            })
+
+            setLinks(lista)
+            
+        })
+
+        return () => {
+            unsub();
+        }
+
+
+    }, [])
+
+    function handleRegister(e: FormEvent){
+        e.preventDefault();
+
+        if(input === '' || urlInput === ''){
+            toast.warning('Preencha todos os campos');
+            return;
+        }
+
+        addDoc(collection(db, "links"), {
+            name: input,
+            url: urlInput,
+            color: corInput,
+            bg: bgCorInput,
+            created: new Date()
+
+        })
+        .then(() => {
+            toast.success("Link criado com sucesso!");
+            setInput('');
+            setUrlInput('');
+        })
+        .catch(() =>{
+            toast.warning("Falha ao criar o link!");
+        })
+    }
+
+    async function handleDelete(id: string){
+        const docRef = doc(db, "links", id);
+        await deleteDoc(docRef);
     }
 
     return(
@@ -78,17 +153,30 @@ export function Admin(){
                 </button>
             </form>
 
+           
+
             <section className="w-full max-w-xl">
                 <h1 className="text-white font-bold text-4xl text-center">Meus Links</h1>
-                <article className="flex items-center justify-between  gap-4 rounded-md mt-4 bg-black text-white p-2 px-3">
-                    <div>
-                        <p>Meu canal do Youtube</p>
-                    </div>
-                    <div className="border p-2">
-                        <FiTrash size={20} color="#fff" className="cursor-pointer"/>
-                    </div>
-                </article>
+                {links.map((link) => (
+                    <article 
+                        className="flex items-center justify-between  gap-4 rounded-md mt-4  
+                         p-2 px-3"
+                        key={link.id}
+                        style={{backgroundColor: link.bg, color: link.color}}
+                    >
+                        <div >
+                            <p>{link.name}</p>
+                        </div>
+                        <button
+                            className="border p-2"
+                            onClick={() =>handleDelete(link.id)}
+                        >
+                            <FiTrash size={20} color="#fff" className="cursor-pointer"/>
+                        </button>
+                    </article>
+                ))}
             </section>
+           
         </div>
         
     );
