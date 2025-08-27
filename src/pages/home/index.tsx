@@ -8,9 +8,8 @@ import {
     query,
     doc,
     getDoc,
-    onSnapshot
-
 } from "firebase/firestore";
+import { Social } from "../../components/social";
 
 interface LinkProps{
     id: string;
@@ -20,9 +19,16 @@ interface LinkProps{
     bg: string;
 }
 
+interface RedesSociaisProps{
+    linkedin: string;
+    github: string;
+    instagram: string;
+}
+
 export function Home(){
 
     const [links, setLink] = useState<LinkProps []>([]);
+    const [linksSociais, setLinksSociais] = useState <RedesSociaisProps>();
 
     useEffect(()=>{
        function loadLinks(){
@@ -47,6 +53,25 @@ export function Home(){
 
        loadLinks();
     }, [])
+
+    useEffect(() => {
+
+        function loadSocialLinks(){
+            const docRef = doc(db, "redes-sociais", "links")
+            getDoc(docRef)
+            .then((snapshot) => {
+                if(snapshot.data() !== undefined){
+                    setLinksSociais({
+                        linkedin: snapshot.data()?.linkedin,
+                        instagram: snapshot.data()?.instagram,
+                        github: snapshot.data()?.github
+                    })
+                }
+            })
+        }
+        loadSocialLinks();
+
+    })
     return(
         <div 
             className="flex flex-col w-full py-4 items-center justify-center h-screen"
@@ -65,18 +90,20 @@ export function Home(){
                         </a>
                     </section>
                 ))}
+                {linksSociais && Object.keys(linksSociais).length > 0 && (
+                    <footer className="flex justify-center my-3 gap-4">
+                        <Social url={linksSociais?.linkedin}>
+                            <FiLinkedin size={28} color="#fff"/>
+                        </Social>
+                        <Social url={linksSociais?.instagram}>
+                            <FiInstagram size={28} color="#fff"/>
+                        </Social>
+                        <Social url={linksSociais?.github}>
+                            <FiGithub size={28} color="#fff"/>
+                        </Social>
+                    </footer>
+                )}
                 
-                <footer className="flex justify-center my-3 gap-4">
-                    <a href="">
-                        <FiInstagram size={28} color="#fff"/>
-                    </a>
-                    <a href="">
-                        <FiLinkedin size={28} color="#fff"/>
-                    </a>
-                    <a href="">
-                        <FiGithub size={28} color="#fff"/>
-                    </a>
-                </footer>
             </main>
         </div>
     );
