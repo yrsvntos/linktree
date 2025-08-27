@@ -1,7 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Header } from "../../components/header";
 import { Input } from "../../components/input";
 import { FiLink } from "react-icons/fi";
+import { db } from "../services/firebaseConnection";
+import { 
+    setDoc,
+    doc,
+    getDoc
+} from "firebase/firestore";
+import { toast } from "react-toastify";
+
 
 export function RedesSociais(){
 
@@ -9,11 +17,41 @@ export function RedesSociais(){
     const [instagram, setInstagram] = useState("");
     const [github, setGithub] = useState("");
 
+    useEffect(() => {
+        function loadLinks(){
+            const docRef = doc(db, "redes-sociais", "links")
+            getDoc(docRef)
+            .then((snapshot)=>{
+                if(snapshot.data() !== undefined){
+                    setLinkedin(snapshot.data()?.linkedin)
+                    setInstagram(snapshot.data()?.instagram)
+                    setGithub(snapshot.data()?.github)
+                }
+            })
+        }
+        loadLinks();
+    }, [])
+
+
     function handleRegister(e: FormEvent){
         e.preventDefault();
-        alert('Teste');
-        return;
+        
+        setDoc(doc(db, "redes-sociais", "links"), {
+            linkedin: linkedin,
+            instagram: instagram,
+            github: github,
+        })
+        .then(() => {
+            toast.success("Links gravados com sucesso!");
+            return;
+        })
+        .catch((error) => {
+            console.log("Deu erro" +error);
+        })
+
     }
+
+    
 
     return(
         <div className="flex flex-col items-center  justify-center">
